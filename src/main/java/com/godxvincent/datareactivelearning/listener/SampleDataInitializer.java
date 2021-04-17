@@ -6,10 +6,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+//Esta versión esta deprecada
+//import org.springframework.data.r2dbc.core.DatabaseClient;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
-import java.util.function.Consumer;
 
 @Component
 // Esta anotación de lombok analiza el código y entiende que una variable final sin inicializar debe crearsele un constructor.
@@ -19,8 +21,18 @@ public class SampleDataInitializer {
 
     private final ReservationRepository reservationRepository;
 
+    private final DatabaseClient databaseClient;
+
     @EventListener(ApplicationReadyEvent.class)
     public void ready() {
+
+        this.databaseClient
+                .sql("select * from reservation")
+                .fetch()
+                .all()
+                .doOnComplete(() -> log.info("----------------------------------------------"))
+                .subscribe(log::info);
+
 
         // Al hacer crear un flux estoy creando un publicador de eventos de 0 a N.
         // con just estoy creando varios datos que serán emitidos por el publicador
